@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>관리자 페이지 - 우리반 고민 나누기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css" />
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,26 +38,30 @@
     <div id="tab-accounts" class="tab-panel">
       <div class="card">
         <h3>✨ 학생 계정 일괄 생성</h3>
-        <p class="muted">한 줄에 한 명씩, <b>이름,아이디</b> 형식으로 입력하세요. 아이디를 생략하면 자동으로 만들어져요.</p>
+        <p class="muted">한 줄에 한 명씩, <b>이름,아이디,비밀번호</b> 형식으로 입력하세요. 아이디나 비밀번호를 생략하면 아이디는 자동 생성되고, 비밀번호는 아래 "공통 비밀번호"가 대신 쓰여요.</p>
 
-        <div class="row" style="gap:8px; margin-bottom:10px;">
-          <label class="secondary" style="flex:1; text-align:center; cursor:pointer;">
+        <div class="row" style="margin-bottom:10px;">
+          <label class="secondary" style="text-align:center; cursor:pointer;">
             📂 CSV 파일 불러오기
             <input type="file" id="csv-file-input" accept=".csv" class="hidden">
           </label>
           <button class="secondary" onclick="downloadRosterCsv()">📥 현재 명단 CSV 다운로드</button>
         </div>
 
-        <textarea id="roster-input" placeholder="김민준,student01&#10;이서연,student02&#10;박도윤"></textarea>
-        <label>공통 초기 비밀번호</label>
+        <textarea id="roster-input" placeholder="김민준,student01,pw1234&#10;이서연,student02,pw5678&#10;박도윤,student03"></textarea>
+        <label>공통 비밀번호 (개별 비밀번호를 안 적었을 때만 사용)</label>
         <input type="text" id="default-password" value="changeme123">
         <button onclick="bulkCreateAccounts()">일괄 생성하기 🎀</button>
         <div id="account-result" style="margin-top:10px;"></div>
       </div>
       <div class="card">
-        <h3>현재 등록된 학생 목록</h3>
+        <div class="row">
+          <h3 style="margin:0;">현재 등록된 학생 목록</h3>
+          <button class="danger" onclick="bulkDeleteAccounts()">선택 삭제</button>
+        </div>
         <table id="account-table"></table>
-        <p class="muted" style="margin-top:10px;">🔑 비밀번호를 바꿔주고 싶은 학생이 있다면? Firebase 콘솔 → Authentication에서 해당 학생 계정을 삭제한 뒤, 위에서 그 학생 한 명만 새 비밀번호로 다시 "일괄 생성"하면 됩니다.</p>
+        <p class="muted" style="margin-top:10px;">🗑️ 삭제하면 그 학생은 더 이상 로그인할 수 없어요. 다만 Firebase Authentication 목록에는 이름 없는 계정으로 흔적이 남을 수 있는데, 사용에는 지장 없고 신경 쓰이시면 콘솔에서 직접 지워주셔도 돼요.</p>
+        <p class="muted">🔑 비밀번호를 바꿔주고 싶은 학생이 있다면? 먼저 그 학생을 선택 삭제한 뒤, 위에서 새 비밀번호로 다시 "일괄 생성"하면 됩니다.</p>
       </div>
     </div>
 
@@ -66,10 +70,18 @@
       <div class="card">
         <div class="row">
           <strong id="submission-count"></strong>
-          <button id="close-round-btn" onclick="closeRound()">제출 마감</button>
+          <div class="row" style="flex-shrink:0; width:auto;">
+            <button id="close-round-btn" onclick="closeRound()">제출 마감</button>
+            <button id="reopen-round-btn" class="secondary hidden" onclick="reopenRound()">마감 취소</button>
+          </div>
         </div>
       </div>
       <div class="card"><table id="submission-table"></table></div>
+      <div class="card">
+        <h3>📋 제출된 고민 미리보기</h3>
+        <p class="muted">매칭을 실행하기 전에, 내용에 이상이 없는지 한 번 훑어보세요.</p>
+        <div id="preview-list"></div>
+      </div>
     </div>
 
     <!-- 매칭 -->
@@ -118,11 +130,23 @@
         </div>
       </div>
       <div class="card">
+        <h3>📦 지난 라운드 보관함</h3>
+        <p class="muted">초기화된 이전 라운드들이에요. 눌러보면 그때 오갔던 고민/답장을 확인할 수 있어요.</p>
+        <div id="archived-rounds-list"></div>
+      </div>
+      <div class="card">
         <h3>백업 / 초기화</h3>
         <button onclick="downloadBackup()">📥 현재 라운드 백업 다운로드</button><br><br>
         <button class="danger" onclick="resetRound()">🔄 라운드 초기화 (다음 라운드 시작)</button>
-        <p class="muted">초기화해도 이전 데이터는 삭제되지 않고 보관(archived) 처리됩니다.</p>
+        <p class="muted">초기화해도 이전 데이터는 삭제되지 않고 보관(archived) 처리되어, 위 "지난 라운드 보관함"에서 계속 볼 수 있어요.</p>
       </div>
+    </div>
+
+    <!-- 지난 라운드 상세보기 -->
+    <div id="tab-archived-detail" class="tab-panel hidden">
+      <button class="secondary back-btn" onclick="closeArchivedDetail()">‹ 설정으로</button>
+      <h2 id="archived-detail-title"></h2>
+      <div id="archived-detail-list"></div>
     </div>
   </div>
 </div>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>우리반 고민 나누기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css" />
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,10 @@
 <div class="blob blob3"></div>
 <div class="wrap">
   <div class="topbar">
-    <h2 id="welcome">안녕하세요!</h2>
+    <div id="welcome">
+      <h2 class="welcome-title">안녕하세요 👋</h2>
+      <div class="welcome-sub" id="welcome-sub"></div>
+    </div>
     <button class="secondary" onclick="logout()">로그아웃</button>
   </div>
 
@@ -32,15 +35,21 @@
 
     <div class="card clickable" id="mailbox-card">
       <div class="row">
-        <div><strong>📮 우체통</strong></div>
-        <div><span id="mailbox-badge" class="badge hidden">새 소식</span> <span>›</span></div>
+        <div class="row" style="gap:12px;">
+          <span class="mailbox-icon">📮</span>
+          <strong>우체통</strong>
+        </div>
+        <div class="row" style="gap:8px; flex-shrink:0;">
+          <span id="mailbox-badge" class="bubble-badge hidden">새 편지!</span>
+          <span>›</span>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- 고민 작성 화면 -->
   <div id="view-worry" class="hidden">
-    <button class="secondary" onclick="showMain()">‹ 뒤로</button>
+    <button class="secondary back-btn" onclick="showMain()">‹ 뒤로</button>
     <h2>나의 고민 작성하기</h2>
     <p class="muted">이 글은 무작위로 다른 친구 한 명에게 익명으로 전달됩니다.</p>
     <textarea id="worry-text" placeholder="편하게 적어보세요..."></textarea>
@@ -50,14 +59,14 @@
 
   <!-- 우체통 목록 화면 -->
   <div id="view-mailbox" class="hidden">
-    <button class="secondary" onclick="showMain()">‹ 뒤로</button>
-    <h2>📮 나의 우체통</h2>
+    <button class="secondary back-btn" onclick="showMain()">‹ 뒤로</button>
+    <h2><span class="mailbox-icon" style="font-size:28px;">📮</span> 나의 우체통</h2>
     <div id="mailbox-list"></div>
   </div>
 
   <!-- 대화(고민 상세/답장) 화면 -->
   <div id="view-thread" class="hidden">
-    <button class="secondary" onclick="showMailbox()">‹ 우체통으로</button>
+    <button class="secondary back-btn" onclick="showMailbox()">‹ 우체통으로</button>
     <h2 id="thread-title">대화</h2>
     <div class="card">
       <div class="muted" id="thread-original-label"></div>

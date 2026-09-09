@@ -72,6 +72,7 @@ async function loadRound() {
 
   renderSubmissions();
   document.getElementById("close-round-btn").disabled = ROUND.status !== "open";
+  document.getElementById("reopen-round-btn").classList.toggle("hidden", ROUND.status !== "closed");
   document.getElementById("run-match-btn").disabled = ROUND.status === "deployed";
   document.getElementById("rematch-btn").disabled = ROUND.status === "deployed";
   document.getElementById("deploy-btn").disabled = ROUND.status !== "closed";
@@ -99,9 +100,29 @@ function renderAccounts() {
     table.innerHTML = "<tr><td class='muted'>아직 등록된 학생이 없습니다.</td></tr>";
     return;
   }
-  table.innerHTML = "<tr><th>이름</th><th>아이디</th></tr>" + STUDENTS.map(s => `
-    <tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.username || "")}</td></tr>
-  `).join("");
+  table.innerHTML = `<tr><th><input type="checkbox" id="select-all-students" onchange="toggleAllStudentChecks(this)"></th><th>이름</th><th>아이디</th></tr>` +
+    STUDENTS.map(s => `
+      <tr><td><input type="checkbox" class="student-check" value="${s.uid}"></td>
+      <td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.username || "")}</td></tr>
+    `).join("");
+}
+
+function toggleAllStudentChecks(master) {
+  document.querySelectorAll(".student-check").forEach(cb => cb.checked = master.checked);
+}
+
+async function bulkDeleteAccounts() {
+  const checked = Array.from(document.querySelectorAll(".student-check:checked")).map(cb => cb.value);
+  if (!checked.length) { alert("삭제할 학생을 먼저 선택해주세요."); return; }
+  const names = checked.map(uid => nameOf(uid)).join(", ");
+  if (!confirm(`${names} 학생을 삭제할까요?\n(로그인은 즉시 막히지만, Firebase 인증 목록에는 흔적이 일부 남을 수 있어요)`)) return;
+
+  const batch = db.batch();
+  checked.forEach(uid => batch.delete(db.collection("users").doc(uid)));
+  await batch.commit();
+  await loadStudents();
+  renderAccounts();
+  alert("삭제되었습니다.");
 }
 
 function usernameToEmail(username) {
@@ -132,9 +153,8 @@ function downloadTextFile(text, filename) {
 
 async function bulkCreateAccounts() {
   const raw = document.getElementById("roster-input").value.trim();
-  const password = document.getElementById("default-password").value.trim();
+  const commonPassword = document.getElementById("default-password").value.trim();
   if (!raw) return;
-  if (!password || password.length < 6) { alert("비밀번호는 6자 이상이어야 합니다."); return; }
 
   const lines = raw.split("\n").map(l => l.trim()).filter(Boolean);
   const resultBox = document.getElementById("account-result");
@@ -142,13 +162,20 @@ async function bulkCreateAccounts() {
   let successCount = 0;
 
   for (const line of lines) {
-    const [namePart, usernamePart] = line.split(",").map(s => s && s.trim());
+    const [namePart, usernamePart, passwordPart] = line.split(",").map(s => s && s.trim());
     if (!namePart) continue;
     const name = namePart;
     const username = usernamePart || ("student" + Math.floor(1000 + Math.random() * 9000));
+    const password = passwordPart || commonPassword;
     const email = usernameToEmail(username);
     const logLine = document.createElement("div");
     logLine.className = "muted";
+
+    if (!password || password.length < 6) {
+      logLine.textContent = `❌ ${name} (${username}) — 비밀번호가 없거나 6자 미만이라 건너뜀`;
+      resultBox.appendChild(logLine);
+      continue;
+    }
 
     try {
       // 보조 앱 인스턴스를 사용하므로, 계정을 만들어도 선생님의 로그인 세션은 그대로 유지됩니다.
@@ -188,11 +215,31 @@ function renderSubmissions() {
       ? '<span class="status-ok">✅ 제출완료</span>'
       : '<span class="status-no">❌ 미제출</span>'}</td></tr>
   `).join("");
+
+  const preview = document.getElementById("preview-list");
+  if (!WORRIES.length) {
+    preview.innerHTML = "<p class='muted'>아직 제출된 고민이 없어요.</p>";
+  } else {
+    preview.innerHTML = WORRIES.map(w => `
+      <div class="card">
+        <div class="chip">${escapeHtml(nameOf(w.authorUid))}</div>
+        <p style="white-space:pre-wrap;">${escapeHtml(w.text)}</p>
+      </div>
+    `).join("");
+  }
 }
 
 async function closeRound() {
   if (!confirm("제출을 마감할까요? 이후 학생들은 고민을 제출/수정할 수 없습니다.")) return;
   await db.collection("rounds").doc(ROUND.id).update({ status: "closed" });
+  await loadRound();
+}
+
+async function reopenRound() {
+  if (!confirm("제출을 다시 열까요? 매칭을 이미 실행했다면 그 결과는 초기화됩니다.")) return;
+  await db.collection("draftMatches").doc(ROUND.id).delete().catch(() => {});
+  DRAFT_PAIRS = [];
+  await db.collection("rounds").doc(ROUND.id).update({ status: "open" });
   await loadRound();
 }
 
@@ -381,12 +428,69 @@ async function renderSettings() {
     };
   });
   renderKeywordChips();
+  await renderArchivedRoundsList();
+}
+
+async function renderArchivedRoundsList() {
+  const box = document.getElementById("archived-rounds-list");
+  const snap = await db.collection("rounds")
+    .where("classId", "==", CLASS_ID).where("status", "==", "archived").get();
+  const rounds = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => b.roundNumber - a.roundNumber);
+
+  if (!rounds.length) {
+    box.innerHTML = "<p class='muted'>아직 보관된 라운드가 없어요.</p>";
+    return;
+  }
+  box.innerHTML = rounds.map(r => `
+    <div class="card clickable" onclick="viewArchivedRound('${r.id}', ${r.roundNumber})">
+      <div class="row"><strong>${r.roundNumber}라운드</strong><span>›</span></div>
+    </div>
+  `).join("");
+}
+
+async function viewArchivedRound(roundId, roundNumber) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+  document.getElementById("tab-archived-detail").classList.remove("hidden");
+  document.getElementById("archived-detail-title").textContent = `📦 ${roundNumber}라운드 기록`;
+  const list = document.getElementById("archived-detail-list");
+  list.innerHTML = "<p class='muted'>불러오는 중...</p>";
+
+  const assignSnap = await db.collection("assignments").where("roundId", "==", roundId).get();
+  const assignments = assignSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  if (!assignments.length) {
+    list.innerHTML = "<p class='muted'>이 라운드는 배포 전에 초기화되어 기록이 없어요.</p>";
+    return;
+  }
+  list.innerHTML = "";
+  for (const a of assignments) {
+    const worryDoc = await db.collection("worries").doc(a.worryId).get();
+    const repliesSnap = await db.collection("replies").where("assignmentId", "==", a.id).get();
+    const replies = repliesSnap.docs.map(d => d.data())
+      .sort((x, y) => (x.createdAt?.toMillis?.() || 0) - (y.createdAt?.toMillis?.() || 0));
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <div class="chip">${escapeHtml(nameOf(a.authorUid))} → ${escapeHtml(nameOf(a.receiverUid))}</div>
+      <p style="white-space:pre-wrap;">${escapeHtml(worryDoc.exists ? worryDoc.data().text : "(삭제된 고민)")}</p>
+      ${replies.length ? replies.map(r => `
+        <div class="muted">↳ ${escapeHtml(nameOf(r.authorUid))}: <span style="color:#333340;">${escapeHtml(r.text)}</span></div>
+      `).join("") : '<div class="muted">(답장 없음)</div>'}
+    `;
+    list.appendChild(div);
+  }
+}
+
+function closeArchivedDetail() {
+  document.getElementById("tab-archived-detail").classList.add("hidden");
+  document.getElementById("tab-settings").classList.remove("hidden");
 }
 
 function renderKeywordChips() {
   const box = document.getElementById("keyword-chips");
   box.innerHTML = (SETTINGS.keywords || []).map(k => `
-    <span class="chip">${escapeHtml(k)} <a href="#" onclick="removeKeyword('${escapeHtml(k)}');return false;" style="color:#ff5b6e;">✕</a></span>
+    <span class="keyword-chip">${escapeHtml(k)} <a href="#" onclick="removeKeyword('${escapeHtml(k)}');return false;">✕</a></span>
   `).join(" ");
 }
 
