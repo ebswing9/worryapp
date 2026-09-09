@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리반 고민 나누기</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h2 id="welcome">안녕하세요!</h2>
+    <button class="secondary" onclick="logout()">로그아웃</button>
+  </div>
+
+  <!-- 메인 화면 -->
+  <div id="view-main">
+    <div class="card clickable" id="worry-card">
+      <div class="row">
+        <div>
+          <strong>📝 내 고민 작성하기</strong>
+          <div class="muted" id="worry-status">확인 중...</div>
+        </div>
+        <span>›</span>
+      </div>
+    </div>
+
+    <div class="card clickable" id="mailbox-card">
+      <div class="row">
+        <div><strong>📮 우체통</strong></div>
+        <div><span id="mailbox-badge" class="badge hidden">새 소식</span> <span>›</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 고민 작성 화면 -->
+  <div id="view-worry" class="hidden">
+    <button class="secondary" onclick="showMain()">‹ 뒤로</button>
+    <h2>나의 고민 작성하기</h2>
+    <p class="muted">이 글은 무작위로 다른 친구 한 명에게 익명으로 전달됩니다.</p>
+    <textarea id="worry-text" placeholder="편하게 적어보세요..."></textarea>
+    <button id="worry-submit-btn" onclick="submitWorry()">제출하기</button>
+    <p id="worry-locked-msg" class="muted hidden">마감되어 더 이상 수정할 수 없습니다.</p>
+  </div>
+
+  <!-- 우체통 목록 화면 -->
+  <div id="view-mailbox" class="hidden">
+    <button class="secondary" onclick="showMain()">‹ 뒤로</button>
+    <h2>📮 나의 우체통</h2>
+    <div id="mailbox-list"></div>
+  </div>
+
+  <!-- 대화(고민 상세/답장) 화면 -->
+  <div id="view-thread" class="hidden">
+    <button class="secondary" onclick="showMailbox()">‹ 우체통으로</button>
+    <h2 id="thread-title">대화</h2>
+    <div class="card">
+      <div class="muted" id="thread-original-label"></div>
+      <p id="thread-original-text" style="white-space:pre-wrap;"></p>
+      <button class="secondary" style="background:#fff0f1;color:#ff5b6e;" onclick="reportContent()">🚩 신고하기</button>
+    </div>
+    <div id="thread-messages"></div>
+    <div id="thread-reply-box">
+      <textarea id="reply-text" placeholder="답장을 적어주세요..."></textarea>
+      <button onclick="sendReply()">보내기</button>
+    </div>
+    <p id="thread-locked-msg" class="muted hidden">대화가 종료되었습니다.</p>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script src="student.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #f5f6fa;
+  margin: 0;
+  color: #2c2c34;
+}
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+}
+h1, h2, h3 { margin-top: 0; }
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.card.clickable { cursor: pointer; transition: transform .1s; }
+.card.clickable:hover { transform: translateY(-2px); }
+.row { display: flex; justify-content: space-between; align-items: center; }
+button {
+  background: #4d7cfe;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 15px;
+  cursor: pointer;
+}
+button.secondary { background: #e7e9ef; color: #2c2c34; }
+button.danger { background: #ff5b6e; }
+button:disabled { background: #cfd3dd; cursor: not-allowed; }
+input[type=text], input[type=password], textarea, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 10px;
+  font-size: 15px;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+textarea { min-height: 140px; resize: vertical; }
+.badge {
+  display: inline-block;
+  background: #ff5b6e;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  padding: 2px 8px;
+  margin-left: 6px;
+}
+.badge.gray { background: #b6bac4; }
+.badge.warn { background: #f5a623; }
+.status-ok { color: #2ba84a; font-weight: 600; }
+.status-no { color: #ff5b6e; font-weight: 600; }
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tabs button { background: #e7e9ef; color: #2c2c34; }
+.tabs button.active { background: #4d7cfe; color: #fff; }
+.hidden { display: none !important; }
+.muted { color: #8a8f9c; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; }
+table th, table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.chip { display:inline-block; background:#eef1ff; color:#4d7cfe; border-radius:8px; padding:2px 8px; font-size:12px; margin-right:4px; }
