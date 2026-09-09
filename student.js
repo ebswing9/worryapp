@@ -62,7 +62,7 @@ async function refreshMailboxBadge() {
 
     if (MY_WORRY) {
       const sentSnap = await db.collection("assignments")
-        .where("roundId", "==", ROUND.id).where("worryId", "==", MY_WORRY.id).get();
+        .where("roundId", "==", ROUND.id).where("authorUid", "==", ME.uid).get();
       SENT_ASSIGN = sentSnap.empty ? null : { id: sentSnap.docs[0].id, ...sentSnap.docs[0].data() };
     }
     if (RECEIVED_ASSIGN) hasNews = true;

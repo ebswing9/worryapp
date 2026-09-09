@@ -108,6 +108,28 @@ function usernameToEmail(username) {
   return username.trim().toLowerCase() + "@ourclass.local";
 }
 
+document.getElementById("csv-file-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    document.getElementById("roster-input").value = evt.target.result.trim();
+  };
+  reader.readAsText(file, "utf-8");
+});
+
+function downloadRosterCsv() {
+  const rows = ["이름,아이디"].concat(STUDENTS.map(s => `${s.name},${s.username}`));
+  downloadTextFile(rows.join("\n"), `학생명단-${Date.now()}.csv`);
+}
+
+function downloadTextFile(text, filename) {
+  const blob = new Blob(["\uFEFF" + text], { type: "text/csv;charset=utf-8;" }); // BOM 추가로 엑셀에서 한글 안 깨지게
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+}
+
 async function bulkCreateAccounts() {
   const raw = document.getElementById("roster-input").value.trim();
   const password = document.getElementById("default-password").value.trim();
@@ -121,6 +143,7 @@ async function bulkCreateAccounts() {
 
   for (const line of lines) {
     const [namePart, usernamePart] = line.split(",").map(s => s && s.trim());
+    if (!namePart) continue;
     const name = namePart;
     const username = usernamePart || ("student" + Math.floor(1000 + Math.random() * 9000));
     const email = usernameToEmail(username);
@@ -131,7 +154,6 @@ async function bulkCreateAccounts() {
       // 보조 앱 인스턴스를 사용하므로, 계정을 만들어도 선생님의 로그인 세션은 그대로 유지됩니다.
       const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
       await secondaryAuth.signOut();
-      // 프로필 문서는 선생님(교사) 세션의 db로 기록합니다.
       await db.collection("users").doc(cred.user.uid).set({
         name, username, role: "student", classId: CLASS_ID
       });
