@@ -366,6 +366,40 @@ button.heart-btn:hover { transform: translateY(-1px) scale(1.06); }
   margin-right: 4px;
 }
 
+/* ===== 우체통 목록: 2칸 타일 그리드 ===== */
+.mailbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.mail-tile {
+  background: rgba(255, 251, 253, 0.94);
+  border-radius: 22px;
+  padding: 26px 14px;
+  text-align: center;
+  box-shadow: 0 5px 18px rgba(255, 150, 180, 0.1), 0 2px 6px rgba(180, 150, 220, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.mail-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 26px rgba(255, 150, 180, 0.2), 0 4px 10px rgba(180, 150, 220, 0.1);
+}
+.mail-tile.disabled {
+  cursor: default;
+  opacity: 0.55;
+  box-shadow: none;
+}
+.mail-tile.disabled:hover { transform: none; }
+.mail-tile-icon { font-size: 46px; margin-bottom: 8px; }
+.mail-tile-title { font-weight: 700; font-size: 15px; color: #4a3f52; }
+.mail-tile-sub { font-size: 12px; color: #9c92a5; margin-top: 4px; }
+
+@media (max-width: 420px) {
+  .mailbox-grid { grid-template-columns: 1fr; }
+}
+
 /* ===== 스크롤바 꾸미기 ===== */
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: #f5f0f7; border-radius: 10px; }

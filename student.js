@@ -112,44 +112,73 @@ async function openMailboxView() {
     return;
   }
 
+  const grid = document.createElement("div");
+  grid.className = "mailbox-grid";
+
+  // ---- 왼쪽 타일: 내가 받은 편지 ----
+  const receivedTile = document.createElement("div");
   if (RECEIVED_ASSIGN) {
     const worryDoc = await db.collection("worries").doc(RECEIVED_ASSIGN.worryId).get();
     const rr = await db.collection("replies").where("assignmentId", "==", RECEIVED_ASSIGN.id).get();
     const gotHeart = rr.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted);
-    const item = document.createElement("div");
-    item.className = "card clickable";
-    item.innerHTML = `<strong>받은 편지</strong><div class="muted">익명의 친구가 보낸 고민</div>${gotHeart ? '<div class="heart-tag" style="margin-top:6px;">❤️ 내 답장에 고마움을 받았어요</div>' : ''}`;
-    item.onclick = () => openThread({
+    receivedTile.className = "mail-tile";
+    receivedTile.innerHTML = `
+      <div class="mail-tile-icon">📩</div>
+      <div class="mail-tile-title">받은 편지</div>
+      <div class="mail-tile-sub">익명의 친구가 보낸 고민</div>
+      ${gotHeart ? '<div class="heart-tag" style="margin-top:8px;">❤️ 하트를 받았어요</div>' : ''}
+    `;
+    receivedTile.onclick = () => openThread({
       assignmentId: RECEIVED_ASSIGN.id,
       originalLabel: "익명의 친구가 보낸 고민",
       originalText: worryDoc.data().text,
       worryId: RECEIVED_ASSIGN.worryId,
       isReceiver: true
     });
-    list.appendChild(item);
+  } else {
+    receivedTile.className = "mail-tile disabled";
+    receivedTile.innerHTML = `
+      <div class="mail-tile-icon">📭</div>
+      <div class="mail-tile-title">받은 편지</div>
+      <div class="mail-tile-sub">아직 없어요</div>
+    `;
   }
+  grid.appendChild(receivedTile);
 
+  // ---- 오른쪽 타일: 내가 보낸 고민에 온 답장 ----
+  const sentTile = document.createElement("div");
+  let sentHasReply = false, sentGotHeart = false;
   if (SENT_ASSIGN) {
     const repliesSnap = await db.collection("replies").where("assignmentId", "==", SENT_ASSIGN.id).get();
-    if (!repliesSnap.empty) {
-      const gotHeart = repliesSnap.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted);
-      const item = document.createElement("div");
-      item.className = "card clickable";
-      item.innerHTML = `<strong>내가 보낸 고민에 답장이 왔어요</strong><div class="muted">확인하기</div>${gotHeart ? '<div class="heart-tag" style="margin-top:6px;">❤️ 내 답장에 고마움을 받았어요</div>' : ''}`;
-      item.onclick = () => openThread({
-        assignmentId: SENT_ASSIGN.id,
-        originalLabel: "내가 보낸 고민",
-        originalText: MY_WORRY.text,
-        worryId: MY_WORRY.id,
-        isReceiver: false
-      });
-      list.appendChild(item);
-    }
+    sentHasReply = !repliesSnap.empty;
+    sentGotHeart = repliesSnap.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted);
   }
+  if (sentHasReply) {
+    sentTile.className = "mail-tile";
+    sentTile.innerHTML = `
+      <div class="mail-tile-icon">💌</div>
+      <div class="mail-tile-title">답장 도착</div>
+      <div class="mail-tile-sub">내가 보낸 고민에 답장이 왔어요</div>
+      ${sentGotHeart ? '<div class="heart-tag" style="margin-top:8px;">❤️ 하트를 받았어요</div>' : ''}
+    `;
+    sentTile.onclick = () => openThread({
+      assignmentId: SENT_ASSIGN.id,
+      originalLabel: "내가 보낸 고민",
+      originalText: MY_WORRY.text,
+      worryId: MY_WORRY.id,
+      isReceiver: false
+    });
+  } else {
+    sentTile.className = "mail-tile disabled";
+    sentTile.innerHTML = `
+      <div class="mail-tile-icon">📪</div>
+      <div class="mail-tile-title">답장 도착</div>
+      <div class="mail-tile-sub">아직 답장이 없어요</div>
+    `;
+  }
+  grid.appendChild(sentTile);
 
-  if (list.innerHTML === "") {
-    list.innerHTML = '<p class="muted">아직 온 편지가 없어요.</p>';
-  }
+  list.appendChild(grid);
 }
 
 async function openThread(info) {
@@ -178,8 +207,8 @@ async function renderThreadMessages() {
     let heartHtml = "";
     if (!mine) {
       heartHtml = m.hearted
-        ? `<span class="heart-tag">❤️ 고마워요를 보냈어요</span>`
-        : `<button class="btn-xs heart-btn" onclick="sendHeart('${m.id}')">🤍 고마워요</button>`;
+        ? `<span class="heart-tag">❤️ 하트를 보냈어요</span>`
+        : `<button class="btn-xs heart-btn" onclick="sendHeart('${m.id}')">🤍 하트 보내기</button>`;
     }
     div.innerHTML = `
       <div class="row">

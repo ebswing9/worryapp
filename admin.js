@@ -351,17 +351,23 @@ async function renderMonitor() {
   list.innerHTML = "<p class='muted'>불러오는 중...</p>";
   if (ROUND.status !== "deployed") {
     list.innerHTML = "<p class='muted'>아직 배포되지 않았습니다.</p>";
+    document.getElementById("heart-summary").innerHTML = "<p class='muted'>아직 배포되지 않았습니다.</p>";
     return;
   }
   const assignSnap = await db.collection("assignments").where("roundId", "==", ROUND.id).get();
   const assignments = assignSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+  const heartCounts = {}; // { authorUid: count }
   list.innerHTML = "";
   for (const a of assignments) {
     const worryDoc = await db.collection("worries").doc(a.worryId).get();
     const repliesSnap = await db.collection("replies").where("assignmentId", "==", a.id).get();
     const replies = repliesSnap.docs.map(d => d.data())
       .sort((x, y) => (x.createdAt?.toMillis?.() || 0) - (y.createdAt?.toMillis?.() || 0));
+
+    replies.forEach(r => {
+      if (r.hearted) heartCounts[r.authorUid] = (heartCounts[r.authorUid] || 0) + 1;
+    });
 
     const div = document.createElement("div");
     div.className = "card";
@@ -374,6 +380,17 @@ async function renderMonitor() {
     `;
     list.appendChild(div);
   }
+
+  const heartBox = document.getElementById("heart-summary");
+  const ranked = Object.entries(heartCounts).sort((a, b) => b[1] - a[1]);
+  heartBox.innerHTML = ranked.length
+    ? ranked.map(([uid, count]) => `
+        <div class="row" style="padding:6px 0;">
+          <span>${escapeHtml(nameOf(uid))}</span>
+          <span class="heart-tag">❤️ × ${count}</span>
+        </div>
+      `).join("")
+    : '<p class="muted">아직 하트를 받은 학생이 없어요.</p>';
 }
 
 // ---------- 확인필요(플래그) ----------
