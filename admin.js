@@ -369,7 +369,7 @@ async function renderMonitor() {
       <div class="chip">${escapeHtml(nameOf(a.authorUid))} → ${escapeHtml(nameOf(a.receiverUid))}</div>
       <p style="white-space:pre-wrap;">${escapeHtml(worryDoc.data().text)}</p>
       ${replies.length ? replies.map(r => `
-        <div class="muted">↳ ${escapeHtml(nameOf(r.authorUid))}: <span style="color:#2c2c34;">${escapeHtml(r.text)}</span></div>
+        <div class="muted">↳ ${escapeHtml(nameOf(r.authorUid))}: <span style="color:#2c2c34;">${escapeHtml(r.text)}</span>${r.hearted ? ' <span class="heart-tag">❤️</span>' : ''}</div>
       `).join("") : '<div class="muted">(답장 대기중)</div>'}
     `;
     list.appendChild(div);

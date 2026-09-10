@@ -65,10 +65,15 @@ async function refreshMailboxBadge() {
         .where("roundId", "==", ROUND.id).where("authorUid", "==", ME.uid).get();
       SENT_ASSIGN = sentSnap.empty ? null : { id: sentSnap.docs[0].id, ...sentSnap.docs[0].data() };
     }
-    if (RECEIVED_ASSIGN) hasNews = true;
+    if (RECEIVED_ASSIGN) {
+      hasNews = true;
+      const rr = await db.collection("replies").where("assignmentId", "==", RECEIVED_ASSIGN.id).get();
+      if (rr.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted)) hasNews = true;
+    }
     if (SENT_ASSIGN) {
       const r = await db.collection("replies").where("assignmentId", "==", SENT_ASSIGN.id).get();
       if (!r.empty) hasNews = true;
+      if (r.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted)) hasNews = true;
     }
   }
   document.getElementById("mailbox-badge").classList.toggle("hidden", !hasNews);
@@ -109,9 +114,11 @@ async function openMailboxView() {
 
   if (RECEIVED_ASSIGN) {
     const worryDoc = await db.collection("worries").doc(RECEIVED_ASSIGN.worryId).get();
+    const rr = await db.collection("replies").where("assignmentId", "==", RECEIVED_ASSIGN.id).get();
+    const gotHeart = rr.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted);
     const item = document.createElement("div");
     item.className = "card clickable";
-    item.innerHTML = `<strong>받은 편지</strong><div class="muted">익명의 친구가 보낸 고민</div>`;
+    item.innerHTML = `<strong>받은 편지</strong><div class="muted">익명의 친구가 보낸 고민</div>${gotHeart ? '<div class="heart-tag" style="margin-top:6px;">❤️ 내 답장에 고마움을 받았어요</div>' : ''}`;
     item.onclick = () => openThread({
       assignmentId: RECEIVED_ASSIGN.id,
       originalLabel: "익명의 친구가 보낸 고민",
@@ -125,9 +132,10 @@ async function openMailboxView() {
   if (SENT_ASSIGN) {
     const repliesSnap = await db.collection("replies").where("assignmentId", "==", SENT_ASSIGN.id).get();
     if (!repliesSnap.empty) {
+      const gotHeart = repliesSnap.docs.some(d => d.data().authorUid === ME.uid && d.data().hearted);
       const item = document.createElement("div");
       item.className = "card clickable";
-      item.innerHTML = `<strong>내가 보낸 고민에 답장이 왔어요</strong><div class="muted">확인하기</div>`;
+      item.innerHTML = `<strong>내가 보낸 고민에 답장이 왔어요</strong><div class="muted">확인하기</div>${gotHeart ? '<div class="heart-tag" style="margin-top:6px;">❤️ 내 답장에 고마움을 받았어요</div>' : ''}`;
       item.onclick = () => openThread({
         assignmentId: SENT_ASSIGN.id,
         originalLabel: "내가 보낸 고민",
@@ -166,8 +174,20 @@ async function renderThreadMessages() {
     const mine = m.authorUid === ME.uid;
     const div = document.createElement("div");
     div.className = "card";
-    div.style.background = mine ? "#eef1ff" : "#fff";
-    div.innerHTML = `<div class="muted">${mine ? "나" : "상대방"}</div><p style="white-space:pre-wrap;margin:4px 0;">${escapeHtml(m.text)}</p>`;
+    div.style.background = mine ? "#f3f0ff" : "#fff";
+    let heartHtml = "";
+    if (!mine) {
+      heartHtml = m.hearted
+        ? `<span class="heart-tag">❤️ 고마워요를 보냈어요</span>`
+        : `<button class="btn-xs heart-btn" onclick="sendHeart('${m.id}')">🤍 고마워요</button>`;
+    }
+    div.innerHTML = `
+      <div class="row">
+        <div class="muted">${mine ? "나" : "상대방"}</div>
+        ${heartHtml}
+      </div>
+      <p style="white-space:pre-wrap;margin:4px 0;">${escapeHtml(m.text)}</p>
+    `;
     msgBox.appendChild(div);
   });
 
@@ -182,6 +202,14 @@ async function renderThreadMessages() {
 
   replyBox.classList.toggle("hidden", !canReply);
   lockedMsg.classList.toggle("hidden", canReply);
+}
+
+async function sendHeart(replyId) {
+  await db.collection("replies").doc(replyId).update({
+    hearted: true,
+    heartedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  await renderThreadMessages();
 }
 
 async function sendReply() {

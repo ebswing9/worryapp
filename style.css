@@ -334,6 +334,31 @@ table td {
 
 .align-right { display: flex; justify-content: flex-end; }
 
+/* ===== 하트(고마움 표시) ===== */
+.heart-tag {
+  display: inline-block;
+  background: #fff0f4;
+  color: #ff5c7a;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+button.heart-btn {
+  background: #fff0f4;
+  color: #ff5c7a;
+  box-shadow: none;
+  border: 1.5px solid #ffd6e0;
+  animation: heartWiggle 1.8s ease-in-out infinite;
+}
+button.heart-btn:hover { transform: translateY(-1px) scale(1.06); }
+@keyframes heartWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-8deg); }
+  20% { transform: rotate(8deg); }
+  30% { transform: rotate(0deg); }
+}
+
 /* ===== 우체통 큰 아이콘 (일반) ===== */
 .mailbox-icon {
   font-size: 40px;
