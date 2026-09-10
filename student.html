@@ -14,15 +14,19 @@
 <div class="blob blob3"></div>
 <div class="wrap">
   <div class="topbar">
-    <div id="welcome">
-      <h2 class="welcome-title">안녕하세요 👋</h2>
-      <div class="welcome-sub" id="welcome-sub"></div>
-    </div>
-    <button class="secondary" onclick="logout()">로그아웃</button>
+    <div class="greeting" id="welcome"></div>
+    <button class="secondary btn-sm" onclick="logout()">로그아웃</button>
   </div>
 
   <!-- 메인 화면 -->
   <div id="view-main">
+    <div class="hero-mailbox" id="mailbox-card">
+      <span id="mailbox-badge" class="bubble-badge hidden">새 편지!</span>
+      <span class="mailbox-icon">📮</span>
+      <div class="hero-title">우체통</div>
+      <div class="hero-sub">눌러서 확인해보세요</div>
+    </div>
+
     <div class="card clickable" id="worry-card">
       <div class="row">
         <div>
@@ -32,24 +36,11 @@
         <span>›</span>
       </div>
     </div>
-
-    <div class="card clickable" id="mailbox-card">
-      <div class="row">
-        <div class="row" style="gap:12px;">
-          <span class="mailbox-icon">📮</span>
-          <strong>우체통</strong>
-        </div>
-        <div class="row" style="gap:8px; flex-shrink:0;">
-          <span id="mailbox-badge" class="bubble-badge hidden">새 편지!</span>
-          <span>›</span>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- 고민 작성 화면 -->
   <div id="view-worry" class="hidden">
-    <button class="secondary back-btn" onclick="showMain()">‹ 뒤로</button>
+    <button class="secondary btn-sm back-btn" onclick="showMain()">‹ 뒤로</button>
     <h2>나의 고민 작성하기</h2>
     <p class="muted">이 글은 무작위로 다른 친구 한 명에게 익명으로 전달됩니다.</p>
     <textarea id="worry-text" placeholder="편하게 적어보세요..."></textarea>
@@ -59,24 +50,28 @@
 
   <!-- 우체통 목록 화면 -->
   <div id="view-mailbox" class="hidden">
-    <button class="secondary back-btn" onclick="showMain()">‹ 뒤로</button>
+    <button class="secondary btn-sm back-btn" onclick="showMain()">‹ 뒤로</button>
     <h2><span class="mailbox-icon" style="font-size:28px;">📮</span> 나의 우체통</h2>
     <div id="mailbox-list"></div>
   </div>
 
   <!-- 대화(고민 상세/답장) 화면 -->
   <div id="view-thread" class="hidden">
-    <button class="secondary back-btn" onclick="showMailbox()">‹ 우체통으로</button>
-    <h2 id="thread-title">대화</h2>
+    <button class="secondary btn-sm back-btn" onclick="showMailbox()">‹ 우체통으로</button>
+    <div class="row" style="align-items:flex-start;">
+      <h2 id="thread-title" style="margin:0;">대화</h2>
+      <button class="btn-xs" style="background:#fff0f1; color:#ff5c7a; box-shadow:none;" onclick="reportContent()">🚩 신고</button>
+    </div>
     <div class="card">
       <div class="muted" id="thread-original-label"></div>
       <p id="thread-original-text" style="white-space:pre-wrap;"></p>
-      <button class="secondary" style="background:#fff0f1;color:#ff5b6e;" onclick="reportContent()">🚩 신고하기</button>
     </div>
     <div id="thread-messages"></div>
     <div id="thread-reply-box">
       <textarea id="reply-text" placeholder="답장을 적어주세요..."></textarea>
-      <button onclick="sendReply()">보내기</button>
+      <div class="align-right">
+        <button onclick="sendReply()">보내기</button>
+      </div>
     </div>
     <p id="thread-locked-msg" class="muted hidden">대화가 종료되었습니다.</p>
   </div>

@@ -60,8 +60,7 @@
           <button class="danger" onclick="bulkDeleteAccounts()">선택 삭제</button>
         </div>
         <table id="account-table"></table>
-        <p class="muted" style="margin-top:10px;">🗑️ 삭제하면 그 학생은 더 이상 로그인할 수 없어요. 다만 Firebase Authentication 목록에는 이름 없는 계정으로 흔적이 남을 수 있는데, 사용에는 지장 없고 신경 쓰이시면 콘솔에서 직접 지워주셔도 돼요.</p>
-        <p class="muted">🔑 비밀번호를 바꿔주고 싶은 학생이 있다면? 먼저 그 학생을 선택 삭제한 뒤, 위에서 새 비밀번호로 다시 "일괄 생성"하면 됩니다.</p>
+        <p class="muted" style="margin-top:10px;">🗑️ 삭제하면 그 학생은 더 이상 로그인할 수 없어요. 단, 실제 Firebase 인증 계정 자체는 남아있어서 <b>같은 아이디로는 다시 생성이 안 돼요.</b> 완전히 새로 만들고 싶다면 Firebase 콘솔 → Authentication에서 그 계정을 직접 지우거나, 다른 아이디로 새로 만들어주세요.</p>
       </div>
     </div>
 

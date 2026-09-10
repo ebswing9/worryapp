@@ -7,7 +7,7 @@ let CURRENT_THREAD = null;  // 지금 열어본 대화 정보 {assignmentId, ori
 
 requireLogin("student", async (profile) => {
   ME = profile;
-  document.getElementById("welcome-sub").textContent = `${ME.name}님, 오늘 하루도 잘 보내고 있나요?`;
+  document.getElementById("welcome").textContent = `${ME.name}님`;
   await loadRound();
   document.getElementById("worry-card").addEventListener("click", openWorryView);
   document.getElementById("mailbox-card").addEventListener("click", openMailboxView);
