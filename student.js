@@ -201,23 +201,21 @@ async function renderThreadMessages() {
 
   msgs.forEach(m => {
     const mine = m.authorUid === ME.uid;
-    const div = document.createElement("div");
-    div.className = "card";
-    div.style.background = mine ? "#f3f0ff" : "#fff";
+    const row = document.createElement("div");
+    row.className = "chat-row " + (mine ? "mine" : "theirs");
+
     let heartHtml = "";
     if (!mine) {
       heartHtml = m.hearted
-        ? `<span class="heart-tag">❤️ 하트를 보냈어요</span>`
-        : `<button class="btn-xs heart-btn" onclick="sendHeart('${m.id}')">🤍 하트 보내기</button>`;
+        ? `<span class="heart-tag" style="margin-top:4px;">❤️ 하트를 보냈어요</span>`
+        : `<button class="btn-xs heart-btn" style="margin-top:4px;" onclick="sendHeart('${m.id}')">🤍 하트 보내기</button>`;
     }
-    div.innerHTML = `
-      <div class="row">
-        <div class="muted">${mine ? "나" : "상대방"}</div>
-        ${heartHtml}
-      </div>
-      <p style="white-space:pre-wrap;margin:4px 0;">${escapeHtml(m.text)}</p>
+
+    row.innerHTML = `
+      <div class="chat-bubble">${escapeHtml(m.text)}</div>
+      ${heartHtml}
     `;
-    msgBox.appendChild(div);
+    msgBox.appendChild(row);
   });
 
   // 답장 가능 여부 판단
